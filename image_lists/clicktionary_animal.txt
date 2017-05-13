@@ -1,0 +1,5 @@
+bald_eagle
+border_collie
+great_white_shark
+panther
+sorrel
