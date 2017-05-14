@@ -213,7 +213,10 @@ def read_and_decode(
 
     # Convert label from a scalar uint8 tensor to an int32 scalar.
     label = tf.cast(features[label_key.split('/')[0]], tf.int32)
-    return image, label
+
+    # Get filename as a string.
+    filename = tf.cast(features[filename_key.split('/')[0]], tf.string)
+    return image, label, filename
 
 
 def inputs(
@@ -240,14 +243,14 @@ def inputs(
         # (Internally uses a RandomShuffleQueue.)
         # We run this in two threads to avoid being a bottleneck.
         if shuffle_batch:
-            images, labels = tf.train.shuffle_batch(
+            images, labels, filenames = tf.train.shuffle_batch(
                 batch_data, batch_size=batch_size, num_threads=num_threads,
                 capacity=1000 + 3 * batch_size,
                 # Ensures a minimum amount of shuffling of examples.
                 min_after_dequeue=1000)
         else:
-            images, labels = tf.train.batch(
+            images, labels, filenames = tf.train.batch(
                 batch_data, batch_size=batch_size, num_threads=num_threads,
                 capacity=1000 + 3 * batch_size)
 
-        return images, labels
+        return images, labels, filenames

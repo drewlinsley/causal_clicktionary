@@ -20,7 +20,7 @@ def finetune_learning(
         fine_tune_layers=None,
         optimizer='adam'):
     if fine_tune_layers is not None:
-        hold_lr = lr * 3
+        hold_lr = lr / 3
         other_opt_vars, ft_opt_vars = fine_tune_prepare_layers(
             trainable_variables, fine_tune_layers)
         if optimizer == 'adam':
@@ -69,5 +69,5 @@ def class_accuracy(pred, targets):
 
 def hinge_loss(yhat, y):
     return tf.reduce_mean(tf.nn.relu(
-        1 - tf.squeeze(yhat) * tf.cast(y, tf.float32)))
+        1 - (tf.squeeze(yhat) * tf.cast(y, tf.float32))))
     # return tf.contrib.losses.hinge_loss(tf.squeeze(yhat), tf.cast(y, tf.float32))

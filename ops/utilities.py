@@ -25,10 +25,17 @@ def make_dir(d):
         os.makedirs(d)
 
 
-def resample_image_lists(it_list, sp):
+def resample_image_lists(im_list, lab_list, sp):
     # Shuffle each it_list then sample sp
-    sampled_list = []
-    for il, itsp in zip(it_list, sp):
-        npil = np.asarray(il)[np.random.permutation(len(il))]
-        sampled_list += [list(npil[:itsp])]
-    return sampled_list
+    sampled_ims = []
+    sampled_labs = []
+    for im, il, itsp in zip(im_list, lab_list, sp):
+        npim = np.asarray(im)
+        npil = np.asarray(il)
+        shuffle = np.random.permutation(len(im))
+        sampled_ims += [list(npim[shuffle[:itsp]])]
+        sampled_labs += [list(npil[shuffle[:itsp]])]
+    return sampled_ims, sampled_labs
+
+def shuffle_list(l):
+    return list(np.asarray(l)[np.random.permutation(len(l))])

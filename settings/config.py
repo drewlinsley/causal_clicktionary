@@ -38,15 +38,16 @@ class config():
             '_'
         ]
         self.image_file_filter = ['*.png', '*.JPEG']
-        self.search_mode = ['exhaustive', '']
+        self.search_mode = ['clicktionary', 'ILSVRC12']
         self.image_sampling = [
             None,
             [50000, 50000]
         ]
+        self.preshuffle = [False, True]
         self.skip_list_output = 'skip_lists/quick_package_animal_vehicle_skipped'
         self.output_format = 'tfrecords'
         self.packaged_data_path = '/media/data_cifs/clicktionary/causal_experiment_modeling/tf_records'  # '/home/drew/Desktop/clicktionary_files/'
-        self.packaged_data_file = 'animal_vehicle_sampled'
+        self.packaged_data_file = 'animal_vehicle_sampled_fixed'
 
         # Model output
         self.checkpoint_directory = '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints'
@@ -55,25 +56,32 @@ class config():
         self.model_types = {
             'vgg16': [os.path.join(
                 '/media/data_cifs/clicktionary/', 'pretrained_weights', 'vgg16.npy'),
-                ['fc7']],  # 
+                ['fc7'],
+                None], # ['/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_001_2017_05_14_09_54_42/model_1041.ckpt', '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_001_2017_05_14_09_54_42']],  # 
+            'clickme_vgg16': [os.path.join(
+                '/media/data_cifs/clicktionary/', 'checkpoints/gradient_0005_112369_2017_05_12_15_49_34', 'model_0.ckpt'),
+                ['fc7'], None], 
             # 'alexnet': [os.path.join(
             #     '/media/data_cifs/clicktionary/', 'pretrained_weights', 'alexnet.npy'),
             #     'conv1', 'conv2', 'conv3', 'conv4', 'fc5', 'fc6'],
-            # 'resnet': [os.path.join(
-            #     '/media/data_cifs/clicktionary/', 'pretrained_weights', 'resnet_50_data.npy'),
-            #     'conv1', 'conv2', 'conv3', 'conv4', 'fc5', 'fc6']
+            'resnet': [os.path.join(
+                '/media/data_cifs/clicktionary/', 'pretrained_weights', 'resnet_50_data.npy'),
+                []]# 'conv1', 'conv2', 'conv3', 'conv4', 'fc5', 'fc6']
         }
 
+        self.optim_method = 'modeling'  # _sklearn'  # or 'modeling'
+        self.test_method = 'testing'  # _sklearn'  # testing'
         self.train_image_size = [256, 256, 3]  # image size
         self.validation_image_size = [300, 300, 3]  # image size
         self.train_augmentations = None
         self.validation_augmentations = 'resize'
         self.model_image_size = [224, 224, 3]  # input to CNN size
-        self.train_batch = 32
+        self.train_batch = 96
         self.validation_batch = 20
-        self.lr = 1e-3
+        self.lr = 1e-2
         self.epochs = 1
-        self.svm_c = 10**-4
+        self.classifier = 'svm'  # softmax or svm
+        self.c = 1e-4  # 10**-4
         self.number_of_features = 4096
 
     def __getitem__(self, name):

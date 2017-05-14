@@ -3,11 +3,12 @@ import re
 import time
 import numpy as np
 import tensorflow as tf
+import cPickle
 from datetime import datetime
 from ops import utilities
 from ops.data_loader import inputs
 from ops import tf_loss
-
+from sklearn import svm
 
 def print_status(step, loss_value, config, duration, validation_accuracy, log_dir):
     format_str = (
@@ -29,18 +30,13 @@ def import_cnn(model_type):
         __import__('models', fromlist=[model_type]), model_type)
 
 
-def batchnorm(layer):
-    m, v = tf.nn.moments(layer, [0])
-    return tf.nn.batch_normalization(layer, m, v, None, None, 1e-3)
-
-
 def choose_classifier(sample_layer, y, config):
     if config.classifier == 'softmax':
         weights, preds = build_softmax(sample_layer)
-        classifier, loss = softmax_optimization(yhat=preds, y=y, W=weights, b=b, c=config.c, lr=config.lr)
+        classifier, loss = softmax_optimization(preds, y, weights, config.c, config.lr)
     elif config.classifier == 'svm':
-        weights, bias, preds = build_svm(sample_layer)
-        classifier, loss = svm_optimization(yhat=preds, y=y, W=weights, b=bias, c=config.c, lr=config.lr)
+        weights, preds = build_svm(sample_layer)
+        classifier, loss = svm_optimization(preds, y, weights, config.c, config.lr)
     print 'Using a %s' % config.classifier
     return weights, preds, classifier, loss
 
@@ -51,29 +47,38 @@ def build_softmax(x):
         'softmax_W', initializer=tf.zeros([features, 1]))
     b = tf.get_variable(
         'softmax_b', initializer=tf.zeros([1]))
-    return W, b, tf.nn.bias_add(tf.matmul(x, W), b)
+    return W, tf.nn.bias_add(tf.matmul(x, W), b)
 
 
-def softmax_optimization(yhat, y, W, b, c=0.01, lr=0.01):
+def softmax_optimization(yhat, y, W, c=0.01, lr=0.01):
     class_loss = tf.reduce_mean(
         tf.nn.sparse_softmax_cross_entropy_with_logits(yhat, y))
     class_loss += (tf.nn.l2_loss(W) * c)  # l2 regularization
-    return tf.train.GradientDescentOptimizer(lr).minimize(class_loss, var_list=[W, b]), class_loss
+    return tf_loss.finetune_learning(
+        loss=class_loss,
+        trainable_variables=tf.trainable_variables(),
+        lr=lr,
+        fine_tune_layers=['softmax_W', 'softmax_b'],
+        optimizer='adam'), class_loss
 
 
 def build_svm(x):
     features = int(x.get_shape()[-1])
     W = tf.get_variable('svm_W', initializer=tf.zeros([features, 1]))
     b = tf.get_variable('svm_b', initializer=tf.zeros([1]))
-    bnx = batchnorm(x)
-    return W, b, tf.nn.bias_add(tf.matmul(bnx, W), b)
+    return W, tf.matmul(x, W) + b
 
 
-def svm_optimization(yhat, y, W, b, c=1, lr=0.01):
+def svm_optimization(yhat, y, W, c=1, lr=0.01):
     regularization_loss = 0.5*tf.reduce_sum(tf.square(W))
     class_loss = tf_loss.hinge_loss(yhat, y)
     svm_loss = regularization_loss + c*class_loss
-    return tf.train.GradientDescentOptimizer(lr).minimize(svm_loss, var_list=[W, b]), svm_loss
+    return tf_loss.finetune_learning(
+        loss=svm_loss,
+        trainable_variables=tf.trainable_variables(),
+        lr=lr,
+        fine_tune_layers=['svm_W', 'svm_b'],
+        optimizer='adam'), svm_loss
 
 
 def train_classifier_on_model(
@@ -121,10 +126,6 @@ def train_classifier_on_model(
             cnn.build(
                 train_images)
             sample_layer = cnn[selected_layer]  # sample features here with a mask: self.number_of_features
-            weights, yhat, classifier, class_loss = choose_classifier(
-                sample_layer=sample_layer,
-                y=train_labels,
-                config=config)
 
     saver = tf.train.Saver(
         tf.all_variables(), max_to_keep=10)
@@ -142,29 +143,29 @@ def train_classifier_on_model(
     np.save(
         os.path.join(
             config.checkpoint_directory, 'training_config_file'), config)
-    step, losses = 0, []
+    step, scores, labs = 0, [], []
     try:
-        print 'Training model'
+        print 'Getting scores'
         while not coord.should_stop():
             start_time = time.time()
-            _, loss_value, images, labels = sess.run(
-                [classifier, class_loss, train_images, train_labels])
-            losses.append(loss_value)
+            score, lab = sess.run(
+                [sample_layer, train_labels])
+            scores += [score]
+            labs += [lab]
             duration = time.time() - start_time
-            assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
             # End iteration
-            print_status(step, loss_value, config, duration, 0, '')
+            print_status(step, 1, config, duration, 1, '')
             step += 1
-
     except tf.errors.OutOfRangeError:
-        print 'Done training for %d epochs, %d steps.' % (config.epochs, step)
+        import ipdb;ipdb.set_trace()
+        svc = svm.LinearSVC(C=config.c, verbose=True).fit(np.asarray(scores), np.asarray(labs))
         print 'Saved to: %s' % config.checkpoint_directory
     finally:
         ckpt_path = os.path.join(
                 config.checkpoint_directory,
-                'model_' + str(step) + '.ckpt')
-        saver.save(
-            sess, ckpt_path, global_step=step)
+                'model_' + str(step) + '.pkl')
+        with open(ckpt_path, 'wb') as fid:
+            cPickle.dump(svc, fid)    
         print 'Saved checkpoint to: %s' % ckpt_path
         coord.request_stop()
     # Return the final checkpoint for testing

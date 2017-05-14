@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from argparse import ArgumentParser
-from ops import modeling
+from ops import modeling, testing
 from tqdm import tqdm
 import os
 
@@ -19,6 +19,11 @@ def main(config_name=None):
     in_config = getattr(
         __import__('settings', fromlist=[config_name]), config_name)
     dbc = in_config.config()
+    optim_method = getattr(
+        __import__('ops', fromlist=[dbc.optim_method]), dbc.optim_method)
+    test_method = getattr(
+        __import__('ops', fromlist=[dbc.test_method]), dbc.test_method)
+
     # Always train on "train" tfrecords and test on validation
     train_pointer = os.path.join(
         dbc.packaged_data_path, '%s_%s.%s' % (
@@ -27,7 +32,7 @@ def main(config_name=None):
             dbc.output_format))
     validation_pointer = os.path.join(
         dbc.packaged_data_path, '%s_%s.%s' % (
-            'train',
+            'validation',
             dbc.packaged_data_file,
             dbc.output_format))
 
@@ -37,11 +42,22 @@ def main(config_name=None):
         # 2. Loop through layers to test
         for layer in tqdm(p[1]):
             # Train model
-            modeling.train_classifier_on_model(
+            if p[2] is None:
+                ckpt_file, ckpt_dir = optim_method.train_classifier_on_model(
+                    model_type=m,
+                    train_pointer=train_pointer,
+                    selected_layer=layer,
+                    model_weights=p[0],
+                    config=dbc)
+            else:
+                ckpt_file, ckpt_dir = p[2][0], p[2][1]
+            # Test model
+            test_method.test_classifier(
                 model_type=m,
-                train_pointer=train_pointer,
-                validation_pointer=validation_pointer,
+                model_ckpt=ckpt_file,
+                model_dir=ckpt_dir,
                 selected_layer=layer,
+                validation_pointer=validation_pointer,
                 model_weights=p[0],
                 config=dbc)
 
