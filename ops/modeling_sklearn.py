@@ -157,15 +157,14 @@ def train_classifier_on_model(
             print_status(step, 1, config, duration, 1, '')
             step += 1
     except tf.errors.OutOfRangeError:
-        import ipdb;ipdb.set_trace()
-        svc = svm.LinearSVC(C=config.c, verbose=True).fit(np.asarray(scores), np.asarray(labs))
-        print 'Saved to: %s' % config.checkpoint_directory
+        svc = svm.LinearSVC(C=config.c, verbose=True).fit(np.concatenate(scores), np.concatenate(labs))
     finally:
         ckpt_path = os.path.join(
                 config.checkpoint_directory,
                 'model_' + str(step) + '.pkl')
         with open(ckpt_path, 'wb') as fid:
             cPickle.dump(svc, fid)    
+        print 'Saved to: %s' % config.checkpoint_directory
         print 'Saved checkpoint to: %s' % ckpt_path
         coord.request_stop()
     # Return the final checkpoint for testing
