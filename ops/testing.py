@@ -107,11 +107,11 @@ def test_classifier(
             start_time = time.time()
             pred, lab, f = sess.run(
                 [yhat, val_labels, val_files])
-            acc = np.mean(
-                ((pred < 0).astype(float) == lab).astype(float))
+            pred = (pred < 0).astype(int)
+            acc = np.mean(pred == lab)
             scores += [pred]
             results['accs'] += [acc]
-            results['preds'] += [int(x) for x in pred < 0]
+            results['preds'] += [pred]
             results['labs'] += [lab]
             results['files'] += [f]
             duration = time.time() - start_time
