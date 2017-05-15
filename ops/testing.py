@@ -107,7 +107,7 @@ def test_classifier(
             start_time = time.time()
             pred, lab, f = sess.run(
                 [yhat, val_labels, val_files])
-            pred = (pred < 0).astype(int)
+            pred = (pred < 0).astype(int).reshape(1, -1)
             acc = np.mean(pred == lab)
             scores += [pred]
             results['accs'] += [acc]
