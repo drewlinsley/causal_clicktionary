@@ -8,8 +8,7 @@ from datetime import datetime
 from ops import utilities
 from ops.data_loader import inputs
 from ops import tf_loss
-from sklearn import svm
-from sklearn.preprocessing import StandardScalar
+from sklearn import svm, preprocessing
 
 
 def print_status(
@@ -168,25 +167,27 @@ def train_classifier_on_model(
             print_status(step, 1, config, duration, 1, '')
             step += 1
     except tf.errors.OutOfRangeError:
-        X = np.concatenate(scores)
-        y = np.concatenate(labs)
-        zscorer = StandardScalar().fit(X)
-        svc = svm.LinearSVC(C=config.c, verbose=True).fit(
-            zscorer(X), y)
+        print 'Finished extracting scores.'
     finally:
-        ckpt_path = os.path.join(
-                config.checkpoint_directory,
-                'model_' + str(step) + '.pkl')
-        with open(ckpt_path, 'wb') as fid:
-            cPickle.dump(svc, fid)
-        norm_path = os.path.join(
-                config.checkpoint_directory,
-                'normalization_' + str(step) + '.pkl')
-        with open(norm_path, 'wb') as fid:
-            cPickle.dump(zscorer, fid)
-        print 'Saved to: %s' % config.checkpoint_directory
-        print 'Saved checkpoint to: %s' % ckpt_path
         coord.request_stop()
+
+    X = np.concatenate(scores)
+    y = np.concatenate(labs)
+    zscorer = preprocessing.StandardScalar().fit(X)
+    svc = svm.LinearSVC(C=config.c, verbose=True).fit(
+        zscorer(X), y)
+    ckpt_path = os.path.join(
+            config.checkpoint_directory,
+            'model_%s.pkl' % step)
+    with open(ckpt_path, 'wb') as fid:
+        cPickle.dump(svc, fid)
+    norm_path = os.path.join(
+            config.checkpoint_directory,
+            'model_%s_normalization.pkl' % step)
+    with open(norm_path, 'wb') as fid:
+        cPickle.dump(zscorer, fid)
+    print 'Saved to: %s' % config.checkpoint_directory
+    print 'Saved checkpoint to: %s' % ckpt_path
     coord.join(threads)
     sess.close()
     # Return the final checkpoint for testing
