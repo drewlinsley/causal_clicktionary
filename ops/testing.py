@@ -6,6 +6,7 @@ import tensorflow as tf
 from datetime import datetime
 from ops.data_loader import inputs
 from ops import tf_loss
+from tqdm import tqdm
 
 
 def print_status(
@@ -36,7 +37,8 @@ def test_classifier(
         model_type,
         model_weights,
         selected_layer,
-        config):
+        config,
+        simulate_subjects=121):
 
     # Make output directories if they do not exist
     config.checkpoint_directory = model_dir
@@ -91,27 +93,29 @@ def test_classifier(
         'labs': [],
         'files': []
     }
-    if int(tf.__version__.split('.')[1]) > 10:
-        model_ckpt += '-%s' % re.search(
-            '\d+.ckpt', model_ckpt).group().split('.ckpt')[0]
+    # if int(tf.__version__.split('.')[1]) > 10:
+    model_ckpt += '-%s' % re.search(
+        '\d+.ckpt', model_ckpt).group().split('.ckpt')[0]
     saver.restore(sess, model_ckpt)
     np_path = os.path.join(
         config.checkpoint_directory, 'validation_results')
     step = 0
+    scores, labels = [], []
     try:
         print 'Testing model'
         while not coord.should_stop():
             start_time = time.time()
             pred, lab, f = sess.run(
                 [yhat, val_labels, val_files])
-            import ipdb;ipdb.set_trace()
-            results['accs'] += [np.mean(
-                ((pred > 0).astype(float) == lab).astype(float))]
-            results['preds'] += [pred]
+            acc = np.mean(
+                ((pred < 0).astype(float) == lab).astype(float))
+            scores += [pred]
+            results['accs'] += [acc]
+            results['preds'] += [int(x) for x in pred < 0]
             results['labs'] += [lab]
             results['files'] += [f]
             duration = time.time() - start_time
-            print_status(step, 0, config, duration, results['accs'], np_path)
+            print_status(step, 0, config, duration, acc, np_path)
             step += 1
 
     except tf.errors.OutOfRangeError:
@@ -123,3 +127,27 @@ def test_classifier(
     coord.join(threads)
     sess.close()
     print '%.4f%% correct' % np.mean(results['accs'])
+
+    if simulate_subjects:
+        sim_subs = []
+        print 'Simulating subjects'
+        scores = np.concatenate(scores)
+        labels = np.concatenate(results['labs'])
+        for sub in tqdm(range(simulate_subjects)):
+            it_results = {
+                'accs': [],
+                'preds': [],
+                'labs': [],
+                'files': []
+            }
+
+            neuron_drop = np.random.rand(scores.shape[1]) > .95
+            it_scores = np.copy(scores)
+            it_scores[:, neuron_drop] = 0
+            acc = np.mean(pred == labels)
+            it_results['accs'] += [acc]
+            it_results['preds'] += [pred]
+            it_results['labs'] += [labels]
+            it_results['files'] += [np.concatenate(results['files'])]
+            sim_subs += [it_results]
+        np.save(np_path + '_sim_subs', sim_subs)

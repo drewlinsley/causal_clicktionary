@@ -108,7 +108,8 @@ def test_classifier(
             validation_pointer,
             config.validation_batch,
             config.validation_image_size,
-            config.model_image_size[:2],1,
+            config.model_image_size[:2],
+            1,
             shuffle_batch=False)
 
     # Prepare pretrained model on GPU
@@ -197,4 +198,3 @@ def test_classifier(
             it_results['files'] += [np.concatenate(results['files'])]
             sim_subs += [it_results]
         np.save(np_path + '_sim_subs', sim_subs)
-

@@ -57,7 +57,8 @@ class config():
             'vgg16': [os.path.join(
                 '/media/data_cifs/clicktionary/', 'pretrained_weights', 'vgg16.npy'),
                 ['fc7'],
-                None],
+                ['/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_01_2017_05_15_13_34_00/model_2000.ckpt',
+                '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_01_2017_05_15_13_34_00/']],
             # 'clickme_vgg16': [os.path.join(
             #     '/media/data_cifs/clicktionary/clickme_experiment/checkpoints', 'gradient_0001_112369_2017_05_10_18_39_40', 'model_96000.ckpt-96000'),
             #     ['fc7'],
