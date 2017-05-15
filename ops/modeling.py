@@ -9,19 +9,20 @@ from ops.data_loader import inputs
 from ops import tf_loss
 
 
-def print_status(step, loss_value, config, duration, validation_accuracy, log_dir):
+def print_status(
+    step, loss_value, config, duration, validation_accuracy, log_dir):
     format_str = (
         '%s: step %d, loss = %.2f (%.1f examples/sec; '
         '%.3f sec/batch) | validation accuracy %.3f | logdir = %s')
     print (
         format_str % (
-        datetime.now(),
-        step,
-        loss_value,
-        config.train_batch / duration,
-        float(duration),
-        validation_accuracy,
-        log_dir))
+            datetime.now(),
+            step,
+            loss_value,
+            config.train_batch / duration,
+            float(duration),
+            validation_accuracy,
+            log_dir))
 
 
 def import_cnn(model_type):
@@ -36,11 +37,13 @@ def batchnorm(layer):
 
 def choose_classifier(sample_layer, y, config):
     if config.classifier == 'softmax':
-        weights, preds = build_softmax(sample_layer)
-        classifier, loss = softmax_optimization(yhat=preds, y=y, W=weights, b=b, c=config.c, lr=config.lr)
+        weights, bias, preds = build_softmax(sample_layer)
+        classifier, loss = softmax_optimization(
+            yhat=preds, y=y, W=weights, b=bias, c=config.c, lr=config.lr)
     elif config.classifier == 'svm':
         weights, bias, preds = build_svm(sample_layer)
-        classifier, loss = svm_optimization(yhat=preds, y=y, W=weights, b=bias, c=config.c, lr=config.lr)
+        classifier, loss = svm_optimization(
+            yhat=preds, y=y, W=weights, b=bias, c=config.c, lr=config.lr)
     print 'Using a %s' % config.classifier
     return weights, preds, classifier, loss
 
@@ -58,7 +61,8 @@ def softmax_optimization(yhat, y, W, b, c=0.01, lr=0.01):
     class_loss = tf.reduce_mean(
         tf.nn.sparse_softmax_cross_entropy_with_logits(yhat, y))
     class_loss += (tf.nn.l2_loss(W) * c)  # l2 regularization
-    return tf.train.GradientDescentOptimizer(lr).minimize(class_loss, var_list=[W, b]), class_loss
+    return tf.train.GradientDescentOptimizer(lr).minimize(
+        class_loss, var_list=[W, b]), class_loss
 
 
 def build_svm(x):
@@ -73,7 +77,8 @@ def svm_optimization(yhat, y, W, b, c=1, lr=0.01):
     regularization_loss = 0.5*tf.reduce_sum(tf.square(W))
     class_loss = tf_loss.hinge_loss(yhat, y)
     svm_loss = regularization_loss + c*class_loss
-    return tf.train.GradientDescentOptimizer(lr).minimize(svm_loss, var_list=[W, b]), svm_loss
+    return tf.train.GradientDescentOptimizer(lr).minimize(
+        svm_loss, var_list=[W, b]), svm_loss
 
 
 def train_classifier_on_model(
@@ -98,7 +103,8 @@ def train_classifier_on_model(
     [utilities.make_dir(d) for d in dir_list]
 
     print '-'*60
-    print'Training %s over a %s. Saving to %s' % (config.classifier, model_type, dt_stamp)
+    print'Training %s over a %s. Saving to %s' % (
+        config.classifier, model_type, dt_stamp)
     print '-'*60
 
     dcn_flavor = import_cnn(model_type)
@@ -114,11 +120,8 @@ def train_classifier_on_model(
             shuffle_batch=True)
 
     # Prepare pretrained model on GPU
-    import ipdb;ipdb.set_trace()
     with tf.device('/gpu:0'):
         with tf.variable_scope('cnn'):
-            import ipdb;ipdb.set_trace()
-            print 'heet'
             if 'ckpt' in model_weights:
                 cnn = dcn_flavor.model()
             else:
@@ -126,7 +129,7 @@ def train_classifier_on_model(
                     weight_path=model_weights)
             cnn.build(
                 train_images)
-            sample_layer = cnn[selected_layer]  # sample features here with a mask: self.number_of_features
+            sample_layer = cnn[selected_layer]
             weights, yhat, classifier, class_loss = choose_classifier(
                 sample_layer=sample_layer,
                 y=train_labels,
@@ -175,6 +178,7 @@ def train_classifier_on_model(
             sess, ckpt_path, global_step=step)
         print 'Saved checkpoint to: %s' % ckpt_path
         coord.request_stop()
+    coord.join(threads)
+    sess.close()
     # Return the final checkpoint for testing
     return ckpt_path, config.checkpoint_directory
-
