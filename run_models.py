@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 from argparse import ArgumentParser
-from ops import modeling, testing
 from tqdm import tqdm
 import os
 

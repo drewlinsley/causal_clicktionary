@@ -28,7 +28,7 @@ class config():
             ],
             [
                 'idx_ILSVRC12_animal.txt',
-                'idx_ILSVRC12_vehicle.txt'
+                'idx_ILSVRC12_nonanimal.txt'  # 'idx_ILSVRC12_vehicle.txt'
             ]
         ]
         self.keep_proportion = [
@@ -57,7 +57,7 @@ class config():
             'vgg16': [os.path.join(
                 '/media/data_cifs/clicktionary/', 'pretrained_weights', 'vgg16.npy'),
                 ['fc7'],
-                ['/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_01_2017_05_15_08_27_05/model_1041.pkl', '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_01_2017_05_15_08_27_05']],
+                None],
             # 'clickme_vgg16': [os.path.join(
             #     '/media/data_cifs/clicktionary/clickme_experiment/checkpoints', 'gradient_0001_112369_2017_05_10_18_39_40', 'model_96000.ckpt-96000'),
             #     ['fc7'],
@@ -72,14 +72,14 @@ class config():
             #      None]
         }
 
-        self.optim_method = 'modeling_sklearn'  # _sklearn'  # or 'modeling'
-        self.test_method = 'testing_sklearn'  # _sklearn'  # testing'
+        self.optim_method = 'modeling'  # _sklearn'  # or 'modeling'
+        self.test_method = 'testing'  # _sklearn'  # testing'
         self.train_image_size = [256, 256, 3]  # image size
         self.validation_image_size = [300, 300, 3]  # image size
         self.train_augmentations = None
         self.validation_augmentations = 'resize'
         self.model_image_size = [224, 224, 3]  # input to CNN size
-        self.train_batch = 96
+        self.train_batch = 100
         self.validation_batch = 20
         self.lr = 1e-2
         self.epochs = 1

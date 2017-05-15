@@ -67,7 +67,6 @@ def main(config_name=None):
         if shuffle:
             data_dict = utilities.shuffle_list(data_dict)
 
-
         if dbc.output_format == 'tfrecords':
             # 2. Package data into a portable format
             output_pointer = os.path.join(
