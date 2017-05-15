@@ -8,10 +8,8 @@ class model:
     """
 
     def __init__(
-            self,
-            weight_path=None,
-            trainable=True,
-            fine_tune_layers=None):
+                self, weight_path=None, trainable=True,
+                fine_tune_layers=None):
         if weight_path is not None:
             self.data_dict = np.load(weight_path, encoding='latin1').item()
             # pop the specified keys from the weights that will be loaded
@@ -31,12 +29,7 @@ class model:
     def __contains__(self, name):
         return hasattr(self, name)
 
-    def build(
-            self,
-            rgb,
-            output_shape=1000,
-            train_mode=None,
-            batchnorm=None):
+    def build(self, rgb, output_shape=None, train_mode=None, batchnorm=None):
         """
         load variable from npy to build the VGG
 
@@ -44,6 +37,8 @@ class model:
         :param train_mode: a bool tensor, usually a placeholder:
         :if True, dropout will be turned on
         """
+        if output_shape is None:
+            output_shape = 1000
 
         rgb_scaled = rgb * 255.0  # Scale up to imagenet's uint8
 
@@ -136,33 +131,21 @@ class model:
             strides=[1, 2, 2, 1], padding='SAME', name=name)
 
     def conv_layer(
-            self,
-            bottom,
-            in_channels,
-            out_channels,
-            name,
-            filter_size=3,
-            batchnorm=None,
-            return_relu=True):
+                    self, bottom, in_channels,
+                    out_channels, name, batchnorm=None):
         with tf.variable_scope(name):
             filt, conv_biases = self.get_conv_var(
-                filter_size, in_channels, out_channels, name)
+                3, in_channels, out_channels, name)
 
             conv = tf.nn.conv2d(bottom, filt, [1, 1, 1, 1], padding='SAME')
             bias = tf.nn.bias_add(conv, conv_biases)
+            relu = tf.nn.relu(bias)
 
-            if return_relu:
-                relu = tf.nn.relu(bias)
+            if batchnorm is not None:
+                if name in batchnorm:
+                    relu = self.batchnorm(relu)
 
-                if batchnorm is not None:
-                    if name in batchnorm:
-                        relu = self.batchnorm(relu)
-                return relu
-            else:
-                if batchnorm is not None:
-                    if name in batchnorm:
-                        bias = self.batchnorm(bias)
-                return bias
+            return relu
 
     def fc_layer(self, bottom, in_size, out_size, name):
         with tf.variable_scope(name):

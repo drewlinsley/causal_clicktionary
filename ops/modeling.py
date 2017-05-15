@@ -114,10 +114,16 @@ def train_classifier_on_model(
             shuffle_batch=True)
 
     # Prepare pretrained model on GPU
+    import ipdb;ipdb.set_trace()
     with tf.device('/gpu:0'):
         with tf.variable_scope('cnn'):
-            cnn = dcn_flavor.model(
-                weight_path=model_weights)
+            import ipdb;ipdb.set_trace()
+            print 'heet'
+            if 'ckpt' in model_weights:
+                cnn = dcn_flavor.model()
+            else:
+                cnn = dcn_flavor.model(
+                    weight_path=model_weights)
             cnn.build(
                 train_images)
             sample_layer = cnn[selected_layer]  # sample features here with a mask: self.number_of_features
@@ -143,12 +149,14 @@ def train_classifier_on_model(
         os.path.join(
             config.checkpoint_directory, 'training_config_file'), config)
     step, losses = 0, []
+    if 'ckpt' in model_weights:
+        saver.restore(sess, model_weights)
     try:
         print 'Training model'
         while not coord.should_stop():
             start_time = time.time()
-            _, loss_value, images, labels = sess.run(
-                [classifier, class_loss, train_images, train_labels])
+            _, loss_value, labels = sess.run(
+                [classifier, class_loss, train_labels])
             losses.append(loss_value)
             duration = time.time() - start_time
             assert not np.isnan(loss_value), 'Model diverged with loss = NaN'

@@ -57,20 +57,23 @@ class config():
             'vgg16': [os.path.join(
                 '/media/data_cifs/clicktionary/', 'pretrained_weights', 'vgg16.npy'),
                 ['fc7'],
-                None], # ['/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_001_2017_05_14_09_54_42/model_1041.ckpt', '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_001_2017_05_14_09_54_42']],  # 
-            'clickme_vgg16': [os.path.join(
-                '/media/data_cifs/clicktionary/', 'checkpoints/gradient_0005_112369_2017_05_12_15_49_34', 'model_0.ckpt'),
-                ['fc7'], None], 
+                ['/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_01_2017_05_15_08_27_05/model_1041.pkl', '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_01_2017_05_15_08_27_05']],
+            # 'clickme_vgg16': [os.path.join(
+            #     '/media/data_cifs/clicktionary/clickme_experiment/checkpoints', 'gradient_0001_112369_2017_05_10_18_39_40', 'model_96000.ckpt-96000'),
+            #     ['fc7'],
+            #     None],  # ['/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/clickme_vgg16_fc7_01_2017_05_14_16_44_12/model_1041.pkl',
+                # '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/clickme_vgg16_fc7_01_2017_05_14_16_44_12/']], 
             # 'alexnet': [os.path.join(
             #     '/media/data_cifs/clicktionary/', 'pretrained_weights', 'alexnet.npy'),
             #     'conv1', 'conv2', 'conv3', 'conv4', 'fc5', 'fc6'],
-            'resnet': [os.path.join(
-                '/media/data_cifs/clicktionary/', 'pretrained_weights', 'resnet_50_data.npy'),
-                []]# 'conv1', 'conv2', 'conv3', 'conv4', 'fc5', 'fc6']
+            # 'inception_resnet_v2': [os.path.join(
+            #    '/media/data_cifs/clicktionary/', 'pretrained_weights', 'inception_resnet_v2_2016_08_30.ckpt'),
+            #      ['PreLogitsFlatten'],
+            #      None]
         }
 
-        self.optim_method = 'modeling'  # _sklearn'  # or 'modeling'
-        self.test_method = 'testing'  # _sklearn'  # testing'
+        self.optim_method = 'modeling_sklearn'  # _sklearn'  # or 'modeling'
+        self.test_method = 'testing_sklearn'  # _sklearn'  # testing'
         self.train_image_size = [256, 256, 3]  # image size
         self.validation_image_size = [300, 300, 3]  # image size
         self.train_augmentations = None

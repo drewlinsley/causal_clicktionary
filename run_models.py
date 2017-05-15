@@ -51,15 +51,15 @@ def main(config_name=None):
                     config=dbc)
             else:
                 ckpt_file, ckpt_dir = p[2][0], p[2][1]
-            # Test model
-            test_method.test_classifier(
-                model_type=m,
-                model_ckpt=ckpt_file,
-                model_dir=ckpt_dir,
-                selected_layer=layer,
-                validation_pointer=validation_pointer,
-                model_weights=p[0],
-                config=dbc)
+                # Test model
+                test_method.test_classifier(
+                    model_type=m,
+                    model_ckpt=ckpt_file,
+                    model_dir=ckpt_dir,
+                    selected_layer=layer,
+                    validation_pointer=validation_pointer,
+                    model_weights=p[0],
+                    config=dbc)
 
 
 if __name__ == '__main__':

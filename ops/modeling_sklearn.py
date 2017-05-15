@@ -121,8 +121,11 @@ def train_classifier_on_model(
     # Prepare pretrained model on GPU
     with tf.device('/gpu:0'):
         with tf.variable_scope('cnn'):
-            cnn = dcn_flavor.model(
-                weight_path=model_weights)
+            if 'ckpt' in model_weights:
+                cnn = dcn_flavor.model()
+            else:
+                cnn = dcn_flavor.model(
+                    weight_path=model_weights)
             cnn.build(
                 train_images)
             sample_layer = cnn[selected_layer]  # sample features here with a mask: self.number_of_features
@@ -144,6 +147,8 @@ def train_classifier_on_model(
         os.path.join(
             config.checkpoint_directory, 'training_config_file'), config)
     step, scores, labs = 0, [], []
+    if 'ckpt' in model_weights:
+        saver.restore(sess, model_weights)
     try:
         print 'Getting scores'
         while not coord.should_stop():

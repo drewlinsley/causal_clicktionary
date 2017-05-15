@@ -15,14 +15,6 @@ class model():
             weight_path=None,
             trainable=True,
             fine_tune_layers=None):
-        if weight_path is not None:
-            self.data_dict = np.load(weight_path, encoding='latin1').item()
-            # pop the specified keys from the weights that will be loaded
-            if fine_tune_layers is not None:
-                    for key in fine_tune_layers:
-                            del self.data_dict[key]
-        else:
-            self.data_dict = None
 
         self.var_dict = {}
         self.trainable = trainable
@@ -60,26 +52,26 @@ class model():
         """
         end_points = {}
 
-        with tf.variable_scope(scope, 'InceptionResnetV2', [inputs], reuse=reuse):
+        rgb_scaled = rgb * 255.0  # Scale up to imagenet's uint8
+
+        # Convert RGB to BGR
+        red, green, blue = tf.split(rgb_scaled, 3, 3)
+        assert red.get_shape().as_list()[1:] == [224, 224, 1]
+        assert green.get_shape().as_list()[1:] == [224, 224, 1]
+        assert blue.get_shape().as_list()[1:] == [224, 224, 1]
+        bgr = tf.concat([
+            blue - self.VGG_MEAN[0],
+            green - self.VGG_MEAN[1],
+            red - self.VGG_MEAN[2],
+            ], 3, name='bgr')
+        assert bgr.get_shape().as_list()[1:] == [224, 224, 3]
+
+        with tf.variable_scope(scope, 'InceptionResnetV2', [bgr], reuse=reuse):
             with slim.arg_scope([slim.batch_norm, slim.dropout],
                                                     is_training=is_training):
                 with slim.arg_scope([slim.conv2d, slim.max_pool2d, slim.avg_pool2d],
                                                         stride=1, padding='SAME'):
 
-                    rgb_scaled = rgb * 255.0  # Scale up to imagenet's uint8
-
-                    # Convert RGB to BGR
-                    red, green, blue = tf.split(3, 3, rgb_scaled)
-                    assert red.get_shape().as_list()[1:] == [224, 224, 1]
-                    assert green.get_shape().as_list()[1:] == [224, 224, 1]
-                    assert blue.get_shape().as_list()[1:] == [224, 224, 1]
-                    bgr = tf.concat(3, [
-                        blue - self.VGG_MEAN[0],
-                        green - self.VGG_MEAN[1],
-                        red - self.VGG_MEAN[2],
-                    ], name='bgr')
-
-                    assert bgr.get_shape().as_list()[1:] == [224, 224, 3]
                     # 149 x 149 x 32
                     self.Conv2d_1a_3x3 = slim.conv2d(bgr, 32, 3, stride=2, padding='VALID',
                                                         scope='Conv2d_1a_3x3')

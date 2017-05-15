@@ -8,6 +8,9 @@ from ops import utilities
 from ops.data_loader import inputs
 from ops import tf_loss
 from sklearn import svm
+import cPickle
+from tqdm import tqdm
+
 
 def print_status(step, loss_value, config, duration, validation_accuracy, log_dir):
     format_str = (
@@ -87,7 +90,8 @@ def test_classifier(
         model_type,
         model_weights,
         selected_layer,
-        config):
+        config,
+        simulate_subjects=120):
 
     # Make output directories if they do not exist
     config.checkpoint_directory = model_dir
@@ -110,8 +114,11 @@ def test_classifier(
     # Prepare pretrained model on GPU
     with tf.device('/gpu:0'):
         with tf.variable_scope('cnn'):
-            cnn = dcn_flavor.model(
-                weight_path=model_weights)
+            if 'ckpt' in model_weights:
+                cnn = dcn_flavor.model()
+            else:
+                cnn = dcn_flavor.model(
+                    weight_path=model_weights)
             cnn.build(
                 val_images)
             sample_layer = cnn[selected_layer]  # sample features here with a mask: self.number_of_features
@@ -147,7 +154,7 @@ def test_classifier(
             start_time = time.time()
             score, lab, f = sess.run(
                 [sample_layer, val_labels, val_files])
-            import ipdb;ipdb.set_trace()
+            scores += [score]
             pred = svc.predict(score)
             acc = np.mean(pred == lab)
             results['accs'] += [acc]
@@ -166,4 +173,30 @@ def test_classifier(
         coord.request_stop()
     coord.join(threads)
     sess.close()
-    print '%.4f%% correct' % np.mean(acc)
+    print '%.4f%% correct' % np.mean(results['accs'])
+
+    if simulate_subjects:
+        sim_subs = []
+        print 'Simulating subjects'
+        scores = np.concatenate(scores)
+        labels = np.concatenate(results['labs'])
+        for sub in tqdm(range(simulate_subjects)):
+            it_results = {
+                'accs': [],
+                'preds': [],
+                'labs': [],
+                'files': []
+            }
+
+            neuron_drop = np.random.rand(scores.shape[1]) > .95
+            it_scores = np.copy(scores)
+            it_scores[:, neuron_drop] = 0
+            pred = svc.predict(it_scores)
+            acc = np.mean(pred == labels)
+            it_results['accs'] += [acc]
+            it_results['preds'] += [pred]
+            it_results['labs'] += [labels]
+            it_results['files'] += [np.concatenate(results['files'])]
+            sim_subs += [it_results]
+        np.save(np_path + '_sim_subs', sim_subs)
+
