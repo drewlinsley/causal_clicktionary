@@ -9,20 +9,23 @@ from ops import utilities
 from ops.data_loader import inputs
 from ops import tf_loss
 from sklearn import svm
+from sklearn.preprocessing import StandardScalar
 
-def print_status(step, loss_value, config, duration, validation_accuracy, log_dir):
+
+def print_status(
+        step, loss_value, config, duration, validation_accuracy, log_dir):
     format_str = (
         '%s: step %d, loss = %.2f (%.1f examples/sec; '
         '%.3f sec/batch) | validation accuracy %.3f | logdir = %s')
     print (
         format_str % (
-        datetime.now(),
-        step,
-        loss_value,
-        config.train_batch / duration,
-        float(duration),
-        validation_accuracy,
-        log_dir))
+            datetime.now(),
+            step,
+            loss_value,
+            config.train_batch / duration,
+            float(duration),
+            validation_accuracy,
+            log_dir))
 
 
 def import_cnn(model_type):
@@ -33,10 +36,12 @@ def import_cnn(model_type):
 def choose_classifier(sample_layer, y, config):
     if config.classifier == 'softmax':
         weights, preds = build_softmax(sample_layer)
-        classifier, loss = softmax_optimization(preds, y, weights, config.c, config.lr)
+        classifier, loss = softmax_optimization(
+            preds, y, weights, config.c, config.lr)
     elif config.classifier == 'svm':
         weights, preds = build_svm(sample_layer)
-        classifier, loss = svm_optimization(preds, y, weights, config.c, config.lr)
+        classifier, loss = svm_optimization(
+            preds, y, weights, config.c, config.lr)
     print 'Using a %s' % config.classifier
     return weights, preds, classifier, loss
 
@@ -103,7 +108,8 @@ def train_classifier_on_model(
     [utilities.make_dir(d) for d in dir_list]
 
     print '-'*60
-    print'Training %s over a %s. Saving to %s' % (config.classifier, model_type, dt_stamp)
+    print'Training %s over a %s. Saving to %s' % (
+        config.classifier, model_type, dt_stamp)
     print '-'*60
 
     dcn_flavor = import_cnn(model_type)
@@ -128,7 +134,7 @@ def train_classifier_on_model(
                     weight_path=model_weights)
             cnn.build(
                 train_images)
-            sample_layer = cnn[selected_layer]  # sample features here with a mask: self.number_of_features
+            sample_layer = cnn[selected_layer]
 
     saver = tf.train.Saver(
         tf.all_variables(), max_to_keep=10)
@@ -162,16 +168,26 @@ def train_classifier_on_model(
             print_status(step, 1, config, duration, 1, '')
             step += 1
     except tf.errors.OutOfRangeError:
-        svc = svm.LinearSVC(C=config.c, verbose=True).fit(np.concatenate(scores), np.concatenate(labs))
+        X = np.concatenate(scores)
+        y = np.concatenate(labs)
+        zscorer = StandardScalar().fit(X)
+        svc = svm.LinearSVC(C=config.c, verbose=True).fit(
+            zscorer(X), y)
     finally:
         ckpt_path = os.path.join(
                 config.checkpoint_directory,
                 'model_' + str(step) + '.pkl')
         with open(ckpt_path, 'wb') as fid:
-            cPickle.dump(svc, fid)    
+            cPickle.dump(svc, fid)
+        norm_path = os.path.join(
+                config.checkpoint_directory,
+                'normalization_' + str(step) + '.pkl')
+        with open(norm_path, 'wb') as fid:
+            cPickle.dump(zscorer, fid)
         print 'Saved to: %s' % config.checkpoint_directory
         print 'Saved checkpoint to: %s' % ckpt_path
         coord.request_stop()
+    coord.join(threads)
+    sess.close()
     # Return the final checkpoint for testing
     return ckpt_path, config.checkpoint_directory
-

@@ -121,10 +121,8 @@ def test_classifier(
                     weight_path=model_weights)
             cnn.build(
                 val_images)
-            sample_layer = cnn[selected_layer]  # sample features here with a mask: self.number_of_features
+            sample_layer = cnn[selected_layer]
 
-    saver = tf.train.Saver(
-        tf.all_variables(), max_to_keep=10)
     # Initialize the graph
     sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
     # Need to initialize both of these if supplying num_epochs to inputs
