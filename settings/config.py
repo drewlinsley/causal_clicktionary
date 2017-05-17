@@ -31,8 +31,6 @@ class config():
                 'idx_ILSVRC12_nonanimal.txt'  # 'idx_ILSVRC12_vehicle.txt'
             ]
         ]
-        self.keep_proportion = [
-        ]
         self.label_split = [
             '\d+',
             '_'
@@ -43,7 +41,10 @@ class config():
             None,
             [50000, 50000]
         ]
-        self.preshuffle = [False, True]
+        self.preshuffle = [
+            True,
+            True
+            ]
         self.skip_list_output = 'skip_lists/quick_package_animal_vehicle_skipped'
         self.output_format = 'tfrecords'
         self.packaged_data_path = '/media/data_cifs/clicktionary/causal_experiment_modeling/tf_records'  # '/home/drew/Desktop/clicktionary_files/'
@@ -54,15 +55,14 @@ class config():
 
         # Model parameters
         self.model_types = {
-            'vgg16': [os.path.join(
-                '/media/data_cifs/clicktionary/', 'pretrained_weights', 'vgg16.npy'),
-                ['fc7'],
-                ['/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_01_2017_05_15_13_34_00/model_2000.ckpt',
-                '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_01_2017_05_15_13_34_00/']],
-            # 'clickme_vgg16': [os.path.join(
-            #     '/media/data_cifs/clicktionary/clickme_experiment/checkpoints', 'gradient_0001_112369_2017_05_10_18_39_40', 'model_96000.ckpt-96000'),
+            # 'vgg16': [os.path.join(
+            #     '/media/data_cifs/clicktionary/', 'pretrained_weights', 'vgg16.npy'),
             #     ['fc7'],
-            #     None],  # ['/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/clickme_vgg16_fc7_01_2017_05_14_16_44_12/model_1041.pkl',
+            #     ['/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_01_2017_05_15_22_53_47/model_1000.pkl', '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_01_2017_05_15_22_53_47/']],
+            'vgg16': [os.path.join(
+                '/media/data_cifs/clicktionary/clickme_experiment/checkpoints', 'gradient_001_112341_2017_05_15_15_07_42', 'model_56000.ckpt-56000'),
+                ['fc7'],
+                None],
                 # '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/clickme_vgg16_fc7_01_2017_05_14_16_44_12/']], 
             # 'alexnet': [os.path.join(
             #     '/media/data_cifs/clicktionary/', 'pretrained_weights', 'alexnet.npy'),
@@ -73,8 +73,8 @@ class config():
             #      None]
         }
 
-        self.optim_method = 'modeling'  # _sklearn'  # or 'modeling'
-        self.test_method = 'testing'  # _sklearn'  # testing'
+        self.optim_method = 'modeling_sklearn'  # or 'modeling'
+        self.test_method = 'testing_sklearn'  # testing'
         self.train_image_size = [256, 256, 3]  # image size
         self.validation_image_size = [300, 300, 3]  # image size
         self.train_augmentations = None

@@ -8,7 +8,7 @@ from datetime import datetime
 from ops import utilities
 from ops.data_loader import inputs
 from ops import tf_loss
-from sklearn import svm, preprocessing
+from sklearn import svm
 
 
 def print_status(
@@ -134,6 +134,7 @@ def train_classifier_on_model(
             cnn.build(
                 train_images)
             sample_layer = cnn[selected_layer]
+            class_accuracy = tf_loss.class_accuracy(cnn.prob, train_labels)
 
     saver = tf.train.Saver(
         tf.all_variables(), max_to_keep=10)
@@ -158,13 +159,13 @@ def train_classifier_on_model(
         print 'Getting scores'
         while not coord.should_stop():
             start_time = time.time()
-            score, lab = sess.run(
-                [sample_layer, train_labels])
+            score, lab, acc = sess.run(
+                [sample_layer, train_labels, class_accuracy])
             scores += [score]
             labs += [lab]
             duration = time.time() - start_time
             # End iteration
-            print_status(step, 1, config, duration, 1, '')
+            print_status(step, 1, config, duration, acc, '')
             step += 1
     except tf.errors.OutOfRangeError:
         print 'Finished extracting scores.'
@@ -173,9 +174,11 @@ def train_classifier_on_model(
 
     X = np.concatenate(scores)
     y = np.concatenate(labs)
-    zscorer = preprocessing.StandardScalar().fit(X)
-    svc = svm.LinearSVC(C=config.c, verbose=True).fit(
-        zscorer(X), y)
+    mu = np.mean(X, axis=0)
+    sd = np.std(X, axis=0)
+    X = (X - mu) / sd
+    svc = svm.LinearSVC(dual=False, C=config.c, verbose=True).fit(
+        X, y)
     ckpt_path = os.path.join(
             config.checkpoint_directory,
             'model_%s.pkl' % step)
@@ -183,9 +186,8 @@ def train_classifier_on_model(
         cPickle.dump(svc, fid)
     norm_path = os.path.join(
             config.checkpoint_directory,
-            'model_%s_normalization.pkl' % step)
-    with open(norm_path, 'wb') as fid:
-        cPickle.dump(zscorer, fid)
+            'model_%s_normalization' % step)
+    np.savez(norm_path, mu=mu, sd=sd)
     print 'Saved to: %s' % config.checkpoint_directory
     print 'Saved checkpoint to: %s' % ckpt_path
     coord.join(threads)

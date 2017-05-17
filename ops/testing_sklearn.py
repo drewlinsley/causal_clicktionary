@@ -52,12 +52,13 @@ def test_classifier(
     # Prepare data on CPU
     with tf.device('/cpu:0'):
         val_images, val_labels, val_files = inputs(
-            validation_pointer,
-            config.validation_batch,
-            config.validation_image_size,
-            config.model_image_size[:2],
-            1,
-            shuffle_batch=False)
+            tfrecord_file=validation_pointer,
+            batch_size=config.validation_batch,
+            im_size=config.validation_image_size,
+            model_input_shape=config.model_image_size[:2],
+            num_epochs=1,
+            data_augmentations=config.validation_augmentations,
+            shuffle_batch=True)
 
     # Prepare pretrained model on GPU
     with tf.device('/gpu:0'):
@@ -90,7 +91,7 @@ def test_classifier(
 
     with open(model_ckpt, 'rb') as fid:
         svc = cPickle.load(fid)
-        zscorer = cPickle.load(fid.split('.')[0] + '_normalization.pkl')
+        zscorer = np.load(model_ckpt.split('.')[0] + '_normalization.npz')
     np_path = os.path.join(
         config.checkpoint_directory, 'validation_results')
     step = 0
@@ -101,7 +102,7 @@ def test_classifier(
             start_time = time.time()
             score, lab, f = sess.run(
                 [sample_layer, val_labels, val_files])
-            norm_score = zscorer(score)
+            norm_score = (score - zscorer['mu']) / zscorer['sd']
             scores += [norm_score]
             pred = svc.predict(norm_score)
             acc = np.mean(pred == lab)
