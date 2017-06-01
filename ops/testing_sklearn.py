@@ -72,6 +72,9 @@ def test_classifier(
                 val_images)
             sample_layer = cnn[selected_layer]
 
+
+    saver = tf.train.Saver(
+        tf.all_variables(), max_to_keep=10)
     # Initialize the graph
     sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
     # Need to initialize both of these if supplying num_epochs to inputs
@@ -96,6 +99,9 @@ def test_classifier(
         config.checkpoint_directory, 'validation_results')
     step = 0
     scores, labels = [], []
+    if '.ckpt' in model_weights:
+        saver.restore(sess, model_weights) 
+        print 'Restored model from %s' % model_weights
     try:
         print 'Testing model'
         while not coord.should_stop():

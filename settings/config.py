@@ -59,10 +59,10 @@ class config():
             #     '/media/data_cifs/clicktionary/', 'pretrained_weights', 'vgg16.npy'),
             #     ['fc7'],
             #     ['/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_01_2017_05_15_22_53_47/model_1000.pkl', '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_01_2017_05_15_22_53_47/']],
-            'vgg16': [os.path.join(
-                '/media/data_cifs/clicktionary/clickme_experiment/checkpoints', 'gradient_001_112341_2017_05_15_15_07_42', 'model_56000.ckpt-56000'),
+            'clickme_vgg16': [os.path.join(
+                '/media/data_cifs/clicktionary/clickme_experiment/checkpoints', 'gradient_001_112341_2017_05_16_16_20_26', 'model_14000.ckpt-14000'),
                 ['fc7'],
-                None],
+                ['/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/clickme_vgg16_fc7_01_2017_05_17_11_56_08/model_1000.pkl', '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/clickme_vgg16_fc7_01_2017_05_17_11_56_08/']]
                 # '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/clickme_vgg16_fc7_01_2017_05_14_16_44_12/']], 
             # 'alexnet': [os.path.join(
             #     '/media/data_cifs/clicktionary/', 'pretrained_weights', 'alexnet.npy'),

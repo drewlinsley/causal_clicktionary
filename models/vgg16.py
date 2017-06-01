@@ -48,15 +48,15 @@ class model:
         rgb_scaled = rgb * 255.0  # Scale up to imagenet's uint8
 
         # Convert RGB to BGR
-        red, green, blue = tf.split(rgb_scaled, 3, 3)
+        red, green, blue = tf.split(3, 3, rgb_scaled)
         assert red.get_shape().as_list()[1:] == [224, 224, 1]
         assert green.get_shape().as_list()[1:] == [224, 224, 1]
         assert blue.get_shape().as_list()[1:] == [224, 224, 1]
-        bgr = tf.concat([
+        bgr = tf.concat(3, [
             blue - self.VGG_MEAN[0],
             green - self.VGG_MEAN[1],
             red - self.VGG_MEAN[2],
-        ], 3, name='bgr')
+        ], name='bgr')
 
         assert bgr.get_shape().as_list()[1:] == [224, 224, 3]
         input_bgr = tf.identity(bgr, name="lrp_input")

@@ -187,7 +187,7 @@ def train_classifier_on_model(
     norm_path = os.path.join(
             config.checkpoint_directory,
             'model_%s_normalization' % step)
-    np.savez(norm_path, mu=mu, sd=sd)
+    np.savez(norm_path, mu=mu, sd=sd, scores=scores, labs=labs)
     print 'Saved to: %s' % config.checkpoint_directory
     print 'Saved checkpoint to: %s' % ckpt_path
     coord.join(threads)

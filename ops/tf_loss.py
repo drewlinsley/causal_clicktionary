@@ -60,10 +60,11 @@ def ft_optimizer_list(cost, opt_vars, optimizer, lrs, grad_clip=False):
     return tf.group(*ops), gvs
 
 
-def class_accuracy(pred, targets):
+def class_accuracy(pred, targets, animal_non_animal_cut=398):
     # assuming targets is an index
+    pred_trans = tf.cast(tf.greater(tf.argmax(pred, 1), animal_non_animal_cut), tf.int64)
     return tf.reduce_mean(
-        tf.to_float(tf.equal(tf.argmax(pred, 1), tf.cast(
+        tf.to_float(tf.equal(pred_trans, tf.cast(
             targets, dtype=tf.int64))))
 
 
