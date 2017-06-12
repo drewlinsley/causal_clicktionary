@@ -142,8 +142,9 @@ def train_classifier_on_model(
     # Initialize the graph
     sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
     # Need to initialize both of these if supplying num_epochs to inputs
-    sess.run(tf.group(tf.initialize_all_variables(),
-             tf.initialize_local_variables()))
+    sess.run(
+        tf.group(
+            tf.initialize_all_variables(), tf.initialize_local_variables()))
     # Set up exemplar threading
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
@@ -158,6 +159,7 @@ def train_classifier_on_model(
     try:
         print 'Getting scores'
         while not coord.should_stop():
+            import ipdb;ipdb.set_trace()
             start_time = time.time()
             score, lab, acc = sess.run(
                 [sample_layer, train_labels, class_accuracy])

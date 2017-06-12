@@ -20,7 +20,7 @@ def main(config_name=None):
     in_config = getattr(
         __import__('settings', fromlist=[config_name]), config_name)
     dbc = in_config.config()
-    for pi, ip, lf, ls, sp, ff, sm, shuffle in zip(
+    for pi, ip, lf, ls, sp, ff, sm, shuffle, ts in zip(
             dbc.package_indices,
             dbc.image_paths,
             dbc.label_files,
@@ -28,7 +28,9 @@ def main(config_name=None):
             dbc.image_sampling,
             dbc.image_file_filter,
             dbc.search_mode,
-            dbc.preshuffle):
+            dbc.preshuffle,
+            dbc.target_shapes):
+        fl_filter = False
         print 'Working on: %s' % ip
         # 1. Find all images in each ip corresponding to the give lf.
         cats = [utilities.get_label_list(
@@ -37,19 +39,28 @@ def main(config_name=None):
                 it_list)) for it_list in lf]
         file_list = utilities.get_files(
             os.path.join(ip, ff))
+        if not len(file_list):
+            # Assume that we have a dir of dirs
+            print 'No files found with %s. Falling back to \'*\'.'
+            fl_filter = True
+            file_list = utilities.get_files(
+                os.path.join(ip, '*'))
         comb_list, comb_categories = [], []
         for idx, cg in enumerate(cats):
             it_list = []
             for e in tqdm(
                     file_list,
                     desc='Searching file list %s/%s' % (idx, len(cats))):
-                if sm == 'clicktionary':
-                    it_list += [e for ca in cg if re.search(
-                        ca, e.split('/')[-1]) is not None]
-                elif sm == 'ILSVRC12':
-                    split_name = e.split('/')[-1].split('_')[0]
-                    if split_name in cg:
-                        it_list += [e]
+                if fl_filter:
+                    it_list += utilities.get_files(os.path.join(e, ff))
+                else:
+                    if sm == 'clicktionary':
+                        it_list += [e for ca in cg if re.search(
+                            ca, e.split('/')[-1]) is not None]
+                    elif sm == 'ILSVRC12':
+                        split_name = e.split('/')[-1].split('_')[0]
+                        if split_name in cg:
+                            it_list += [e]
             comb_categories += [[idx] * len(it_list)]
             comb_list += [it_list]
         if sp is not None:
@@ -77,7 +88,8 @@ def main(config_name=None):
             data_packager.tfrecords(
                 data_dict=data_dict,
                 file_path=ip,
-                output_pointer=output_pointer)
+                output_pointer=output_pointer,
+                desired_shape=ts)
         else:
             raise RuntimeError(
                 'A wrapper for your output format spec isn\'t implemented.')

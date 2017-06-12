@@ -24,16 +24,16 @@ def main(config_name=None):
         __import__('ops', fromlist=[dbc.test_method]), dbc.test_method)
 
     # Always train on "train" tfrecords and test on validation
-    train_pointer = os.path.join(
+    tf_pointers = {k: os.path.join(
         dbc.packaged_data_path, '%s_%s.%s' % (
-            'train',
+            k,
             dbc.packaged_data_file,
-            dbc.output_format))
-    validation_pointer = os.path.join(
-        dbc.packaged_data_path, '%s_%s.%s' % (
-            'validation',
-            dbc.packaged_data_file,
-            dbc.output_format))
+            dbc.output_format)) for k in dbc.package_indices}
+    train_pointer = [v for k, v in tf_pointers.iteritems() if 'train' in k][0]
+    validation_pointer = [v for k, v in tf_pointers.iteritems() if 'val' in k][0]
+    if train_pointer is None or validation_pointer is None:
+        raise RuntimeError(
+            'Cannot find either \'train\' or \'val\' in the tf pointers.')
 
     # 1. Loop through model types
     for m, p in dbc.model_types.iteritems():
@@ -42,6 +42,7 @@ def main(config_name=None):
         for layer in tqdm(p[1]):
             # Train model
             if p[2] is None:
+                print 'Training from: %s' % train_pointer
                 ckpt_file, ckpt_dir = optim_method.train_classifier_on_model(
                     model_type=m,
                     train_pointer=train_pointer,

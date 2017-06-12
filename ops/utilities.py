@@ -37,5 +37,6 @@ def resample_image_lists(im_list, lab_list, sp):
         sampled_labs += [list(npil[shuffle[:itsp]])]
     return sampled_ims, sampled_labs
 
+
 def shuffle_list(l):
     return list(np.asarray(l)[np.random.permutation(len(l))])

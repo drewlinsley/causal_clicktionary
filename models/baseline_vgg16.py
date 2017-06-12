@@ -2,16 +2,18 @@ import numpy as np
 import tensorflow as tf
 
 
-class Vgg16:
+class model:
     """
     A trainable version VGG16.
     """
 
     def __init__(
-                self, vgg16_npy_path=None, trainable=True,
-                fine_tune_layers=None):
-        if vgg16_npy_path is not None:
-            self.data_dict = np.load(vgg16_npy_path, encoding='latin1').item()
+           self,
+           weight_path=None,
+           trainable=True,
+           fine_tune_layers=None):
+        if weight_path is not None:
+            self.data_dict = np.load(weight_path, encoding='latin1').item()
             # pop the specified keys from the weights that will be loaded
             if fine_tune_layers is not None:
                 for key in fine_tune_layers:

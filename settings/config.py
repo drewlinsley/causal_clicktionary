@@ -14,12 +14,12 @@ class config():
         # Path to search for images
         self.image_list_path = 'image_lists'
         self.package_indices = [
-            'validation',
+            'exp_1_validation',
             'train'
         ]
         self.image_paths = [
-            '/media/data_cifs/clicktionary/webapp_data/clicktionary_probabilistic_region_growth_centered',
-            '/media/data_cifs/clicktionary/webapp_data/lmdb_trains'
+            '/media/data_cifs/clicktionary/webapp_data/exp_1_clicktionary_probabilistic_region_growth_centered',
+            '/media/data_cifs/imagenet_tfrecords/raw-data/train' #  '/media/data_cifs/clicktionary/webapp_data/lmdb_trains'
         ]
         self.label_files = [
             [
@@ -48,21 +48,21 @@ class config():
         self.skip_list_output = 'skip_lists/quick_package_animal_vehicle_skipped'
         self.output_format = 'tfrecords'
         self.packaged_data_path = '/media/data_cifs/clicktionary/causal_experiment_modeling/tf_records'  # '/home/drew/Desktop/clicktionary_files/'
-        self.packaged_data_file = 'animal_vehicle_sampled_fixed'
+        self.packaged_data_file = 'animal_vehicle'
 
         # Model output
         self.checkpoint_directory = '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints'
 
         # Model parameters
         self.model_types = {
-            # 'vgg16': [os.path.join(
-            #     '/media/data_cifs/clicktionary/', 'pretrained_weights', 'vgg16.npy'),
-            #     ['fc7'],
-            #     ['/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_01_2017_05_15_22_53_47/model_1000.pkl', '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/vgg16_fc7_01_2017_05_15_22_53_47/']],
-            'clickme_vgg16': [os.path.join(
-                '/media/data_cifs/clicktionary/clickme_experiment/checkpoints', 'gradient_001_112341_2017_05_16_16_20_26', 'model_14000.ckpt-14000'),
+            'baseline_vgg16': [os.path.join(
+                '/media/data_cifs/clicktionary/', 'pretrained_weights', 'vgg16.npy'),
                 ['fc7'],
-                ['/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/clickme_vgg16_fc7_01_2017_05_17_11_56_08/model_1000.pkl', '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/clickme_vgg16_fc7_01_2017_05_17_11_56_08/']]
+                None],
+            # 'clickme_vgg16': [os.path.join(
+            #     '/media/data_cifs/clicktionary/clickme_experiment/checkpoints', 'gradient_001_112341_2017_05_16_16_20_26', 'model_14000.ckpt-14000'),
+            #     ['fc7'],
+            #     ['/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/clickme_vgg16_fc7_01_2017_05_17_11_56_08/model_1000.pkl', '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/clickme_vgg16_fc7_01_2017_05_17_11_56_08/']]
                 # '/media/data_cifs/clicktionary/causal_experiment_modeling/checkpoints/clickme_vgg16_fc7_01_2017_05_14_16_44_12/']], 
             # 'alexnet': [os.path.join(
             #     '/media/data_cifs/clicktionary/', 'pretrained_weights', 'alexnet.npy'),
@@ -77,6 +77,10 @@ class config():
         self.test_method = 'testing_sklearn'  # testing'
         self.train_image_size = [256, 256, 3]  # image size
         self.validation_image_size = [300, 300, 3]  # image size
+        self.target_shapes = [
+            self.validation_image_size,
+            self.train_image_size
+        ]
         self.train_augmentations = None
         self.validation_augmentations = 'resize'
         self.model_image_size = [224, 224, 3]  # input to CNN size

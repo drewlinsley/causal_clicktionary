@@ -10,6 +10,19 @@ from tqdm import tqdm
 from copy import deepcopy
 
 
+def center_crop(image, target_shape):
+    ihw = image.shape
+    croph, cropw, ch = target_shape
+    starth = ihw[0]//2-(croph//2)
+    startw = ihw[1]//2-(cropw//2)
+    if len(ihw) < ch:
+        image = np.repeat(image[:, :, None], ch, axis=-1)
+    ci = image[starth:starth+croph, startw:startw+cropw]
+    if ihw[-1] != ch:
+        ci = np.repeat(ci, ch, axis=-1)
+    return ci
+
+
 def bytes_feature(values):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[values]))
 
@@ -65,15 +78,25 @@ def encode_tf_record(data_dict):
 def extract_to_tf_records(
         data_dict,
         output_pointer,
-        file_path = '',
+        file_path='',
+        desired_shape=None,
         filename_key='filename/string',
         image_key='image/string'):
+    if desired_shape is None:
+        raise RuntimeError('You must supply a shape to \'desired_shape\'.')
+    elif not isinstance(desired_shape, tuple):
+        desired_shape = tuple(desired_shape)
     print 'Building: %s' % output_pointer
     with tf.python_io.TFRecordWriter(output_pointer) as tfrecord_writer:
         for row_dict in tqdm(data_dict):
             row_dict[image_key] = load_image(
                 os.path.join(file_path, row_dict[filename_key])).astype(
-                np.float32).tostring()
+                np.float32)
+            if row_dict[image_key].shape != desired_shape:
+                row_dict[image_key] = center_crop(
+                    row_dict[image_key],
+                    desired_shape)
+            row_dict[image_key] = row_dict[image_key].tostring()
             if row_dict[image_key] is not None:
                 record = encode_tf_record(row_dict)
                 # use the proto object to serialize the example to a string
@@ -82,7 +105,7 @@ def extract_to_tf_records(
                 tfrecord_writer.write(serialized)
 
 
-def tfrecords(data_dict, file_path, output_pointer):
+def tfrecords(data_dict, file_path, output_pointer, desired_shape):
     # Make dirs if they do not exist
     split_pointer = output_pointer.split('/')[:-1]
     if split_pointer[0] == '':
@@ -94,7 +117,8 @@ def tfrecords(data_dict, file_path, output_pointer):
     extract_to_tf_records(
         data_dict=deepcopy(data_dict),
         file_path=file_path,
-        output_pointer=output_pointer)
+        output_pointer=output_pointer,
+        desired_shape=desired_shape)
     print 'Saved to %s' % output_pointer
     # Also save a "meta" info file
     with open(
